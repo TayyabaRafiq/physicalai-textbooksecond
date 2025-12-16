@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git config:*)",
+      "Bash(mkdir:*)",
+      "Bash(git fetch:*)",
+      "Bash(if [ -d \"specs\" ])",
+      "Bash(then ls -d specs/*-textbook-content)",
+      "Bash(else echo \"No specs directory\")",
+      "Bash(fi)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \".specify/scripts/powershell/create-new-feature.ps1\" -Json -Number 1 -ShortName \"textbook-content\" \"AI-Native Physical AI & Humanoid Robotics Textbook\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File \".specify/scripts/powershell/setup-plan.ps1\" -Json)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \".specify/scripts/powershell/check-prerequisites.ps1\" -Json)",
+      "Bash(bash:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \".specify/scripts/powershell/create-phr.ps1\" -Title \"Task Generation for Content Creation Workflow\" -Stage \"tasks\" -Feature \"001-textbook-content\" -Json)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \".specify/scripts/powershell/check-prerequisites.ps1\" -Json -RequireTasks -IncludeTasks)",
+      "Bash(ls:*)",
+      "Bash(rm:*)",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(echo:*)",
+      "Bash(timeout 10 npm start)",
+      "Bash(powershell -Command:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \".specify/scripts/powershell/create-phr.ps1\" -Title \"Phase 2 Foundational Validation\" -Stage \"tasks\" -Feature \"001-textbook-content\" -Json)",
+      "Bash(if [ -d \"D:\\ai-textbooksecond\\specs\\001-textbook-content\\checklists\" ])",
+      "Bash(then echo \"EXISTS\")",
+      "Bash(else echo \"NOT_FOUND\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File \".specify/scripts/powershell/create-phr.ps1\" -Title \"Module 1 Chapter 2 Summary Generation\" -Stage \"misc\" -Feature \"001-textbook-content\" -Json)",
+      "Bash(netstat:*)",
+      "Bash(npm run typecheck:*)"
+    ]
+  }
+}

@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Production
+build/
+dist/
+.docusaurus/
+.cache-loader
+
+# Generated files
+.docusaurus
+.cache
+*.log
+
+# Misc
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Specify framework
+.specify/.cache/
+
+# Temporary
+*.tmp
+*.temp

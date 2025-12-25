@@ -1,0 +1,475 @@
+openapi: 3.0.3
+info:
+  title: RAG Chatbot Backend API
+  description: |
+    REST API for the RAG (Retrieval-Augmented Generation) chatbot backend that answers questions about the Physical AI textbook.
+
+    ## Features
+    - Ingest textbook markdown content (chunking, embedding, storage)
+    - Answer questions using full textbook retrieval
+    - Answer questions using user-selected text only (context-restricted mode)
+    - Source citations for all answers (grounded generation)
+
+    ## Authentication
+    None (public API with rate limiting)
+
+    ## Rate Limits
+    - Ingestion: 10 requests/minute per IP
+    - Questions: 100 requests/minute per IP
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.example.com/api/v1
+    description: Production server
+  - url: http://localhost:8000/api/v1
+    description: Local development server
+
+tags:
+  - name: Ingestion
+    description: Content ingestion endpoints
+  - name: Questions
+    description: Question answering endpoints
+  - name: Health
+    description: Health check and status endpoints
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check if the API is running and healthy
+      operationId: healthCheck
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /ingestion:
+    post:
+      tags:
+        - Ingestion
+      summary: Ingest textbook content
+      description: |
+        Submit a markdown file for ingestion. The system will:
+        1. Parse the markdown into hierarchical chunks (module → chapter → section)
+        2. Generate embeddings using Cohere embed-english-v3.0
+        3. Store embeddings in Qdrant and metadata in Neon Postgres
+
+        Returns a job ID to track ingestion progress.
+      operationId: ingestContent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngestionRequest'
+      responses:
+        '202':
+          description: Ingestion job accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait before retrying
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ingestion/status/{job_id}:
+    get:
+      tags:
+        - Ingestion
+      summary: Get ingestion job status
+      description: Check the status of an ingestion job (accepted, processing, completed, failed)
+      operationId: getIngestionStatus
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Ingestion job ID returned from POST /ingestion
+      responses:
+        '200':
+          description: Job status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionStatusResponse'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /question:
+    post:
+      tags:
+        - Questions
+      summary: Ask a question (full textbook mode)
+      description: |
+        Submit a question to be answered using the full textbook content.
+
+        The system will:
+        1. Generate an embedding for the question
+        2. Retrieve the top-k most relevant chunks from Qdrant
+        3. Generate an answer using Cohere Command model with retrieved chunks as context
+        4. Return the answer with source citations
+
+        If no relevant content is found, returns "I cannot answer based on the textbook content."
+      operationId: askQuestion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionRequest'
+      responses:
+        '200':
+          description: Answer generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnswerResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait before retrying
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /question/selected-text:
+    post:
+      tags:
+        - Questions
+      summary: Ask a question about selected text (context-restricted mode)
+      description: |
+        Submit a question to be answered using ONLY the user-selected text as context.
+
+        The system will:
+        1. Generate an answer using Cohere Command model with ONLY the selected text
+        2. Return the answer marked as context-restricted
+
+        No vector search is performed. If the selected text is insufficient to answer the question,
+        returns "I cannot answer based on the selected text alone."
+      operationId: askQuestionSelectedText
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelectedTextQuestionRequest'
+      responses:
+        '200':
+          description: Answer generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnswerResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait before retrying
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - version
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Overall API health status
+        version:
+          type: string
+          description: API version
+          example: "1.0.0"
+        services:
+          type: object
+          description: Health status of dependent services
+          properties:
+            qdrant:
+              type: string
+              enum: [connected, disconnected]
+            neon:
+              type: string
+              enum: [connected, disconnected]
+            cohere:
+              type: string
+              enum: [connected, disconnected]
+
+    IngestionRequest:
+      type: object
+      required:
+        - file_path
+        - module_title
+        - module_order
+      properties:
+        file_path:
+          type: string
+          description: Path to the markdown file to ingest
+          example: "content/module1/intro.md"
+        module_title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Title of the module
+          example: "Module 1: Introduction to Physical AI"
+        module_description:
+          type: string
+          description: Optional description of the module
+          example: "This module introduces fundamental concepts in Physical AI and robotics."
+        module_order:
+          type: integer
+          minimum: 1
+          description: Order of the module in the textbook
+          example: 1
+
+    IngestionResponse:
+      type: object
+      required:
+        - job_id
+        - status
+        - message
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: Unique ID to track ingestion job status
+          example: "ing-123e4567-e89b-12d3-a456-426614174000"
+        status:
+          type: string
+          enum: [accepted, processing, completed, failed]
+          description: Current job status
+          example: "accepted"
+        message:
+          type: string
+          description: Human-readable status message
+          example: "Ingestion job accepted. Check /api/v1/ingestion/status/{job_id} for progress."
+
+    IngestionStatusResponse:
+      type: object
+      required:
+        - job_id
+        - status
+        - message
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: Ingestion job ID
+        status:
+          type: string
+          enum: [accepted, processing, completed, failed]
+          description: Current job status
+        message:
+          type: string
+          description: Human-readable status message
+        progress:
+          type: object
+          description: Progress details (only present during processing)
+          properties:
+            total_chunks:
+              type: integer
+              description: Total number of chunks to process
+            processed_chunks:
+              type: integer
+              description: Number of chunks processed so far
+            percentage:
+              type: integer
+              minimum: 0
+              maximum: 100
+              description: Completion percentage
+        error:
+          type: string
+          description: Error message (only present if status is failed)
+
+    QuestionRequest:
+      type: object
+      required:
+        - question
+      properties:
+        question:
+          type: string
+          minLength: 5
+          maxLength: 500
+          description: The user's question about the textbook
+          example: "What is physical AI?"
+
+    SelectedTextQuestionRequest:
+      type: object
+      required:
+        - question
+        - selected_text
+      properties:
+        question:
+          type: string
+          minLength: 5
+          maxLength: 500
+          description: The user's question about the selected text
+          example: "Can you explain this concept in simpler terms?"
+        selected_text:
+          type: string
+          minLength: 10
+          maxLength: 5000
+          description: Text selected by the user from the textbook
+          example: "Physical AI refers to artificial intelligence systems that interact with the physical world through embodied agents, such as robots. These systems combine perception, reasoning, and action to operate in real-world environments."
+
+    SourceCitation:
+      type: object
+      required:
+        - module
+        - chapter
+        - section
+        - chunk_id
+      properties:
+        module:
+          type: string
+          description: Module title
+          example: "Module 1: Introduction to Physical AI"
+        chapter:
+          type: string
+          description: Chapter title
+          example: "Chapter 1: What is Physical AI?"
+        section:
+          type: string
+          description: Section title
+          example: "Section 1.1: Defining Physical AI"
+        chunk_id:
+          type: integer
+          description: Database ID of the chunk (for debugging)
+          example: 42
+
+    AnswerResponse:
+      type: object
+      required:
+        - answer
+        - sources
+        - mode
+        - confidence
+      properties:
+        answer:
+          type: string
+          description: The generated answer to the question
+          example: "Physical AI refers to artificial intelligence systems that interact with the physical world through embodied agents, such as robots. These systems combine perception, reasoning, and action to operate in real-world environments."
+        sources:
+          type: array
+          description: Source citations for the answer (module, chapter, section)
+          items:
+            $ref: '#/components/schemas/SourceCitation'
+        mode:
+          type: string
+          enum: [full_textbook, selected_text]
+          description: Question answering mode used
+          example: "full_textbook"
+        confidence:
+          type: string
+          enum: [high, medium, low]
+          description: Confidence level of the answer based on retrieval quality
+          example: "high"
+
+    ErrorDetail:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code
+          example: "INVALID_INPUT"
+          enum:
+            - INVALID_INPUT
+            - NOT_FOUND
+            - RATE_LIMIT_EXCEEDED
+            - NO_RELEVANT_CONTENT
+            - SERVICE_UNAVAILABLE
+            - INTERNAL_ERROR
+        message:
+          type: string
+          description: Human-readable error message
+          example: "The question field is required and must be between 5 and 500 characters."
+        details:
+          type: object
+          description: Additional error context (field-specific errors, stack traces for debugging)
+          additionalProperties: true
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+
+  securitySchemes: {}

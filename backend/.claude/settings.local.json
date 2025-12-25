@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv sync:*)",
+      "Bash(find:*)",
+      "Bash(uv run:*)",
+      "Bash(curl:*)",
+      "Bash(cat:*)",
+      "Bash(tee:*)",
+      "Bash(test:*)",
+      "Bash(python -m json.tool:*)",
+      "WebSearch",
+      "Bash(taskkill:*)"
+    ]
+  }
+}

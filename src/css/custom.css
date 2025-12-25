@@ -48,3 +48,43 @@ article h5,
 article h6 {
   color: var(--ifm-heading-color);
 }
+
+/* Floating Chat Button */
+.floating-chat-button {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 50px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  z-index: 999;
+  transition: all 0.3s ease;
+}
+
+.floating-chat-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  color: white;
+  text-decoration: none;
+}
+
+.floating-chat-button:active {
+  transform: translateY(-1px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .floating-chat-button {
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9rem;
+  }
+}

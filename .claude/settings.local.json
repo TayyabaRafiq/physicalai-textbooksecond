@@ -27,7 +27,14 @@
       "Bash(else echo \"NOT_FOUND\")",
       "Bash(powershell -ExecutionPolicy Bypass -File \".specify/scripts/powershell/create-phr.ps1\" -Title \"Module 1 Chapter 2 Summary Generation\" -Stage \"misc\" -Feature \"001-textbook-content\" -Json)",
       "Bash(netstat:*)",
-      "Bash(npm run typecheck:*)"
+      "Bash(npm run typecheck:*)",
+      "Bash(touch:*)",
+      "Bash(tree:*)",
+      "Bash(powershell:*)",
+      "Bash(npm start)",
+      "Bash(timeout 30 bash:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

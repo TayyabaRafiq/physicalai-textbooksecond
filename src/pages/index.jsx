@@ -31,6 +31,8 @@ export default function Home() {
             {siteConfig.title}
           </h1>
 
+          <p className="homepage-author">Made by Tayyaba Rafiq</p>
+
           <p style={{
             fontSize: '1.5rem',
             marginBottom: '2rem',

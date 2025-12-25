@@ -42,21 +42,13 @@ async def root():
 
 # NOW safe to import and initialize everything else
 # If any of these fail, /health and / will still work
+initialization_successful = False
 try:
     from fastapi import HTTPException
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.exceptions import RequestValidationError
     from app.core.config import get_settings
     from app.core.logging import setup_logging, get_logger
-    from app.api.routes import ingestion, question
-    from app.api.middleware.timing import TimingMiddleware
-    from app.api.middleware.error_handler import (
-        validation_exception_handler,
-        http_exception_handler,
-        general_exception_handler,
-        service_exception_handler,
-        ServiceError
-    )
 
     # Setup logging
     setup_logging()
@@ -74,6 +66,16 @@ try:
         allow_headers=["*"],
     )
 
+    # Import middleware and error handlers
+    from app.api.middleware.timing import TimingMiddleware
+    from app.api.middleware.error_handler import (
+        validation_exception_handler,
+        http_exception_handler,
+        general_exception_handler,
+        service_exception_handler,
+        ServiceError
+    )
+
     # Add timing middleware
     app.add_middleware(TimingMiddleware)
 
@@ -83,17 +85,24 @@ try:
     app.add_exception_handler(HTTPException, http_exception_handler)
     app.add_exception_handler(Exception, general_exception_handler)
 
-    # Include routers
-    app.include_router(
-        ingestion.router,
-        prefix="/api/v1",
-        tags=["Ingestion"]
-    )
-    app.include_router(
-        question.router,
-        prefix="/api/v1",
-        tags=["Questions"]
-    )
+    # Import and include routers (these imports might fail if dependencies aren't configured)
+    try:
+        from app.api.routes import ingestion, question
+
+        app.include_router(
+            ingestion.router,
+            prefix="/api/v1",
+            tags=["Ingestion"]
+        )
+        app.include_router(
+            question.router,
+            prefix="/api/v1",
+            tags=["Questions"]
+        )
+        print("✓ API routers loaded successfully")
+    except Exception as router_error:
+        print(f"⚠ Warning: Could not load API routers: {router_error}")
+        print("  /health and / endpoints available, but /api/v1/* endpoints unavailable")
 
     @app.on_event("startup")
     async def startup_event():
@@ -112,9 +121,11 @@ try:
         except Exception as e:
             print(f"Warning: Shutdown event error: {e}")
 
-    logger.info("Backend initialization successful")
+    initialization_successful = True
+    logger.info("✓ Backend initialization successful")
 
 except Exception as e:
+    initialization_successful = False
     # If initialization fails, print to stdout (HF Spaces logs)
     # but /health and / endpoints will still work
     print(f"ERROR: Backend initialization failed: {e}")

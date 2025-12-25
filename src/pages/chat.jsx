@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Layout from '@theme/Layout';
 
-const API_URL = 'http://localhost:8000';
+const API_URL = 'https://tayyabaali-physical-ai-backend.hf.space';
 
 export default function Chat() {
   const [question, setQuestion] = useState('');

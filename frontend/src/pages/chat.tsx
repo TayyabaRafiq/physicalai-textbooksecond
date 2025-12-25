@@ -35,7 +35,7 @@ export default function ChatPage(): JSX.Element {
     setResponse(null);
 
     try {
-      const res = await fetch('http://localhost:8000/api/v1/question', {
+      const res = await fetch('https://tayyabaali-physical-ai-backend.hf.space/api/v1/question', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -53,7 +53,7 @@ export default function ChatPage(): JSX.Element {
       setError(
         err instanceof Error
           ? err.message
-          : 'Failed to connect to backend. Make sure the server is running on http://localhost:8000'
+          : 'Failed to connect to backend. Please try again later.'
       );
     } finally {
       setLoading(false);
@@ -121,7 +121,7 @@ export default function ChatPage(): JSX.Element {
             <h3>⚠️ Error</h3>
             <p>{error}</p>
             <p className={styles.errorHint}>
-              Make sure the backend is running: <code>uvicorn main:app --reload</code>
+              The backend may be experiencing issues. Please try again in a moment.
             </p>
           </div>
         )}

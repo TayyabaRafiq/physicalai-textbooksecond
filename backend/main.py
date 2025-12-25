@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from app.core.config import get_settings
@@ -7,6 +7,7 @@ from app.api.routes import ingestion, question, health
 from app.api.middleware.timing import TimingMiddleware
 from app.api.middleware.error_handler import (
     validation_exception_handler,
+    http_exception_handler,
     general_exception_handler,
     service_exception_handler,
     ServiceError
@@ -41,9 +42,10 @@ app.add_middleware(
 # Add timing middleware
 app.add_middleware(TimingMiddleware)
 
-# Add exception handlers
+# Add exception handlers (order matters - most specific first)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(ServiceError, service_exception_handler)
+app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(Exception, general_exception_handler)
 
 # Simple root and health endpoints (no dependencies)
@@ -63,10 +65,7 @@ async def health():
     return {"status": "ok", "version": "0.1.0"}
 
 # Include routers
-app.include_router(
-    health.router,
-    tags=["Health"]
-)
+# Note: Simple /health endpoint defined above, not using health.router to avoid dependencies
 app.include_router(
     ingestion.router,
     prefix="/api/v1",

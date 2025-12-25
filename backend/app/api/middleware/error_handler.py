@@ -4,7 +4,7 @@ Provides consistent error responses and validation error handling.
 """
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
+from fastapi.exceptions import RequestValidationError, HTTPException
 from pydantic import ValidationError
 from app.core.logging import get_logger
 
@@ -52,6 +52,45 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
                 }
             }
         }
+    )
+
+
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    """
+    Handle HTTP exceptions raised by dependencies or route handlers.
+
+    Args:
+        request: FastAPI request
+        exc: HTTPException
+
+    Returns:
+        JSON response with error details
+    """
+    # If detail is already properly formatted, use it
+    if isinstance(exc.detail, dict) and "error" in exc.detail:
+        content = exc.detail
+    else:
+        # Otherwise, format it consistently
+        content = {
+            "error": {
+                "code": "HTTP_ERROR",
+                "message": str(exc.detail) if exc.detail else "An error occurred",
+                "details": None
+            }
+        }
+
+    logger.warning(
+        f"HTTP exception on {request.url.path}: {exc.status_code} - {exc.detail}",
+        extra={
+            "path": request.url.path,
+            "status_code": exc.status_code,
+            "detail": exc.detail
+        }
+    )
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=content
     )
 
 

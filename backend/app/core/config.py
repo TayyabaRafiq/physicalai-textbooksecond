@@ -9,18 +9,18 @@ class Settings(BaseSettings):
     """
 
     # Cohere API Configuration
-    COHERE_API_KEY: str
+    COHERE_API_KEY: str | None = None
     COHERE_MODEL_EMBED: str = "embed-english-v3.0"
     COHERE_MODEL_GENERATE: str = "command-a-03-2025"
 
     # Qdrant Cloud Configuration
-    QDRANT_API_KEY: str
-    QDRANT_URL: str
+    QDRANT_API_KEY: str | None = None
+    QDRANT_URL: str | None = None
     QDRANT_CLUSTER_ID: str | None = None
     QDRANT_COLLECTION_NAME: str = "textbook_chunks"
 
     # Neon Serverless Postgres Configuration
-    NEON_DATABASE_URL: str
+    NEON_DATABASE_URL: str | None = None
 
     # Application Configuration
     ENVIRONMENT: str = "development"

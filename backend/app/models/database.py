@@ -178,6 +178,10 @@ class AnswerLog(Base):
 def get_engine():
     """Create async database engine"""
     settings = get_settings()
+
+    if not settings.NEON_DATABASE_URL:
+        raise ValueError("NEON_DATABASE_URL is not configured")
+
     return create_async_engine(
         settings.NEON_DATABASE_URL,
         echo=False,  # Set to True for SQL query logging
@@ -203,6 +207,9 @@ def get_session_factory():
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """
     Get async database session.
+
+    Raises:
+        ValueError: If NEON_DATABASE_URL is not configured
 
     Yields:
         AsyncSession: SQLAlchemy async session

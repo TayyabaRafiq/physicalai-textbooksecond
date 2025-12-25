@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Layout from '@theme/Layout';
 
-const API_URL = 'https://tayyabaali-physical-ai-backend.hf.space';
+const API_URL = 'https://tayyabaali-physical-ai-backend.hf.space/api/v1';
 
 export default function Chat() {
   const [question, setQuestion] = useState('');
@@ -17,7 +17,7 @@ export default function Chat() {
     setAnswer('');
 
     try {
-      const res = await fetch(`${API_URL}/api/v1/question`, {
+      const res = await fetch(`${API_URL}/question`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question }),

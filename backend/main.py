@@ -46,6 +46,22 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(ServiceError, service_exception_handler)
 app.add_exception_handler(Exception, general_exception_handler)
 
+# Simple root and health endpoints (no dependencies)
+@app.get("/")
+async def root():
+    """Root endpoint"""
+    return {
+        "service": "Physical AI RAG Backend",
+        "version": "0.1.0",
+        "status": "running",
+        "docs": "/docs"
+    }
+
+@app.get("/health")
+async def health():
+    """Simple health check without dependencies"""
+    return {"status": "ok", "version": "0.1.0"}
+
 # Include routers
 app.include_router(
     health.router,

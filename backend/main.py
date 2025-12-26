@@ -17,7 +17,6 @@ app = FastAPI(
 
 @app.get("/health")
 def health():
-    # HF Free tier SAFE endpoint
     return {"status": "ok"}
 
 @app.get("/")
@@ -87,7 +86,6 @@ async def startup():
         logger.info("Backend started successfully")
 
     except Exception as e:
-        # IMPORTANT: never crash startup on HF
         print(f"Startup error (non-fatal): {e}")
 
 # --------------------------------------------------

@@ -53,6 +53,11 @@ const config: Config = {
           label: 'Textbook',
         },
         {
+          to: '/chat',
+          label: 'Chatbot',
+          position: 'right',
+        },
+        {
           href: 'https://github.com/your-username/ai-textbook',
           label: 'GitHub',
           position: 'right',

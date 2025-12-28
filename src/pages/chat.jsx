@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import Layout from '@theme/Layout';
 
-const API_URL = 'http://127.0.0.1:8000/api/v1';
+const API_URL = 'https://tayyabaali-deploy2-ragchatbot.hf.space/api/v1';
 
 const styles = {
+  maxWidth: '900px',
   container: {
-    maxWidth: '900px',
     margin: '0 auto',
     padding: '20px',
   },

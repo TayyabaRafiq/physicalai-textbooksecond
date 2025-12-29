@@ -9,7 +9,7 @@ app = FastAPI(
 # ✅ Middleware goes HERE (NOT in startup)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://physicalai-textbooksecond.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

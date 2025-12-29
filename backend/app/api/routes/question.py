@@ -21,18 +21,49 @@ router = APIRouter()
 # ---------------------------
 # Helper function
 # ---------------------------
-def safe_answer_str(answer):
+def normalize_answer(answer):
     """
-    Ensure answer is always a readable string
+    Normalize answer to always return a plain string.
+
+    Args:
+        answer: The answer to normalize (can be str, dict, list, or other)
+
+    Returns:
+        str: A readable string representation of the answer
+
+    Examples:
+        - String input: returns as-is
+        - Dict input: extracts common text fields (text, content, message, answer)
+        - List input: joins elements with newlines
+        - None: returns empty string
+        - Other: converts to string safely
     """
+    # Already a string - return as-is
+    if isinstance(answer, str):
+        return answer
+
+    # Dictionary - try common text field keys
     if isinstance(answer, dict):
-        return answer.get("text") or answer.get("content") or answer.get("message") or json.dumps(answer, indent=2)
-    elif isinstance(answer, list):
-        return "\n".join(map(str, answer))
-    elif answer is None:
+        # Try common keys in order of preference
+        for key in ["text", "content", "message", "answer"]:
+            if key in answer and answer[key]:
+                # Recursively normalize in case the value is also complex
+                return normalize_answer(answer[key])
+        # No common keys found - return formatted JSON
+        return json.dumps(answer, indent=2)
+
+    # List - join elements into readable string
+    if isinstance(answer, list):
+        if not answer:
+            return ""
+        return "\n".join(str(item) for item in answer)
+
+    # None - return empty string
+    if answer is None:
         return ""
-    else:
-        return str(answer)
+
+    # Other types - safe string conversion
+    return str(answer)
 
 # ---------------------------
 # Full textbook question endpoint
@@ -82,7 +113,7 @@ async def ask_question(
         )
 
         return AnswerResponse(
-            answer=safe_answer_str(response.answer),
+            answer=normalize_answer(response.answer),
             confidence=response.confidence,
             sources=response.sources,
             mode=getattr(response, "mode", None)
@@ -146,7 +177,7 @@ async def ask_about_selected_text(
         )
 
         return AnswerResponse(
-            answer=safe_answer_str(response.answer),
+            answer=normalize_answer(response.answer),
             confidence=getattr(response, "confidence", None),
             sources=getattr(response, "sources", []),
             mode=getattr(response, "mode", None)

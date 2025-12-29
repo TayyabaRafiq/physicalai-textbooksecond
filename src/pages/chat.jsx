@@ -111,64 +111,76 @@ export default function Chat() {
   const [error, setError] = useState('');
 
   const askQuestion = async () => {
-    if (!question.trim()) return;
+  if (!question.trim()) return;
 
-    setLoading(true);
-    setError('');
-    setAnswer('');
+  setLoading(true);
+  setError('');
+  setAnswer('');
 
+  try {
+    console.log('Sending request to:', `${API_URL}/question`);
+    console.log('Request body:', { question });
+
+    const res = await fetch(`${API_URL}/question`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question }),
+    });
+
+    console.log('Response status:', res.status);
+    console.log('Response ok:', res.ok);
+
+    let data;
     try {
-      console.log('Sending request to:', `${API_URL}/question`);
-      console.log('Request body:', { question });
-
-      const res = await fetch(`${API_URL}/question`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question }),
-      });
-
-      console.log('Response status:', res.status);
-      console.log('Response ok:', res.ok);
-
-      let data;
-      try {
-        data = await res.json();
-        console.log('Response data:', data);
-      } catch (parseError) {
-        console.error('Failed to parse response as JSON:', parseError);
-        throw new Error(`Server returned invalid JSON (Status: ${res.status})`);
-      }
-
-      if (!res.ok) {
-        const errorMsg = data.detail || data.message || data.error?.message || data.error || `Server error (${res.status})`;
-        console.error('Backend error:', errorMsg);
-        throw new Error(errorMsg);
-      }
-
-      // Handle response - try multiple possible field names
-      const answerText = data.answer || data.response || data.data?.answer || data.result;
-
-      if (!answerText) {
-        console.error('No answer field found in response:', data);
-        throw new Error('Backend returned invalid response format');
-      }
-
-      setAnswer(answerText);
-    } catch (err) {
-      console.error('Full error details:', err);
-
-      // Better error messages for common issues
-      if (err.name === 'TypeError' && err.message.includes('fetch')) {
-        setError('Network error: Unable to connect to backend. Check CORS settings or network connection.');
-      } else {
-        setError(err.message || 'An unexpected error occurred');
-      }
-    } finally {
-      setLoading(false);
+      data = await res.json();
+      console.log('Raw backend response:', data);
+    } catch (parseError) {
+      console.error('Failed to parse response as JSON:', parseError);
+      throw new Error(`Server returned invalid JSON (Status: ${res.status})`);
     }
-  };
 
-  const handleKeyPress = (e) => {
+    if (!res.ok) {
+      const errorMsg = data.detail || data.message || data.error?.message || data.error || `Server error (${res.status})`;
+      console.error('Backend error:', errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    // Handle response safely
+    let answerText = data.answer || data.response || data.data?.answer || data.result;
+
+    let displayAnswer = '';
+    if (typeof answerText === 'string') {
+      displayAnswer = answerText;
+    } else if (Array.isArray(answerText)) {
+      displayAnswer = answerText
+        .map(item => item.text || item.content || JSON.stringify(item))
+        .join('\n');
+    } else if (typeof answerText === 'object' && answerText !== null) {
+      displayAnswer =
+        answerText.text ||
+        answerText.content ||
+        answerText.message ||
+        JSON.stringify(answerText, null, 2);
+    } else {
+      displayAnswer = 'No answer returned from backend';
+    }
+
+    setAnswer(displayAnswer);
+
+  } catch (err) {
+    console.error('Full error details:', err);
+
+    if (err.name === 'TypeError' && err.message.includes('fetch')) {
+      setError('Network error: Unable to connect to backend. Check CORS or network.');
+    } else {
+      setError(err.message || 'An unexpected error occurred');
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
+const handleKeyPress = (e) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       askQuestion();
     }

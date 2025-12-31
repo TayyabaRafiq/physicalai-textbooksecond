@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: physical-ai-backend
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: COHERE_API_KEY
+        sync: false
+      - key: COHERE_MODEL_GENERATE
+        sync: false
+      - key: QDRANT_API_KEY
+        sync: false
+      - key: QDRANT_URL
+        sync: false
+      - key: NEON_DATABASE_URL
+        sync: false
+    healthCheckPath: /health

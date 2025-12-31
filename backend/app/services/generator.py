@@ -122,7 +122,18 @@ class GeneratorService:
                 preamble="You are a helpful AI tutor specializing in Physical AI. You provide clear, accurate explanations based strictly on the provided textbook content."
             )
 
-            answer_text = response.text.strip()
+            # CRITICAL FIX: Ensure answer is ALWAYS a string
+            try:
+                if hasattr(response, 'text') and response.text:
+                    answer_text = str(response.text).strip()
+                elif isinstance(response, dict) and 'text' in response:
+                    answer_text = str(response['text']).strip()
+                else:
+                    answer_text = str(response).strip()
+                if not answer_text:
+                    answer_text = "Unable to generate answer."
+            except Exception as e:
+                answer_text = "Error processing response."
 
             # Step 4: Assess confidence based on chunk scores
             confidence = self._assess_confidence(context_chunks)
@@ -330,7 +341,18 @@ Answer (be clear and beginner-friendly):"""
                 preamble="You are a helpful AI tutor specializing in Physical AI. You provide clear, accurate explanations based strictly on the provided text."
             )
 
-            answer_text = response.text.strip()
+            # CRITICAL FIX: Ensure answer is ALWAYS a string
+            try:
+                if hasattr(response, 'text') and response.text:
+                    answer_text = str(response.text).strip()
+                elif isinstance(response, dict) and 'text' in response:
+                    answer_text = str(response['text']).strip()
+                else:
+                    answer_text = str(response).strip()
+                if not answer_text:
+                    answer_text = "Unable to generate answer."
+            except Exception as e:
+                answer_text = "Error processing response."
 
             logger.info(
                 "Generated answer from selected text",

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Layout from '@theme/Layout';
 
-const API_URL = 'https://tayyabaali-deploy2-ragchatbot.hf.space/api/v1';
+const API_URL = 'https://tayyabaali-physical-ai-backend.hf.space/api/v1';
 
 const styles = {
   maxWidth: '900px',

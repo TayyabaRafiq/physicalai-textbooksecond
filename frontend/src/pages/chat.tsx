@@ -16,17 +16,59 @@ interface QuestionResponse {
   confidence: string;
 }
 
-export default function ChatPage(): JSX.Element {
+export default function ChatPage(): React.JSX.Element {
   const [question, setQuestion] = useState('');
   const [response, setResponse] = useState<QuestionResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Helper function to safely convert any value to string
+  const safeStringify = (value: any): string => {
+    if (typeof value === 'string') return value;
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (typeof value === 'object') {
+      // Try to extract text from common object patterns
+      if (value.text) return safeStringify(value.text);
+      if (value.content) return safeStringify(value.content);
+      if (value.message) return safeStringify(value.message);
+      if (value.answer) return safeStringify(value.answer);
+      // Fallback to JSON string
+      return JSON.stringify(value, null, 2);
+    }
+    return String(value);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!question.trim()) {
       setError('Please enter a question');
+      return;
+    }
+
+    // Handle friendly greetings and simple messages
+    const lowerQuestion = question.trim().toLowerCase();
+    const greetings = ['hello', 'hi', 'hey', 'hola', 'salam'];
+    const thanks = ['thanks', 'thank you', 'thx', 'thankyou', 'shukriya', 'شکریہ'];
+
+    if (greetings.some(g => lowerQuestion === g || lowerQuestion.startsWith(g + ' '))) {
+      setResponse({
+        answer: "Hello! 👋 I'm your Physical AI & Robotics assistant. I can help you with questions about Physical AI, ROS 2, simulation, humanoid robotics, and safety. Feel free to ask me anything!",
+        sources: [],
+        mode: 'greeting',
+        confidence: 'High'
+      });
+      return;
+    }
+
+    if (thanks.some(t => lowerQuestion.includes(t))) {
+      setResponse({
+        answer: "You're welcome! 😊 Feel free to ask me more questions about Physical AI, ROS 2, or robotics anytime!",
+        sources: [],
+        mode: 'acknowledgment',
+        confidence: 'High'
+      });
       return;
     }
 
@@ -44,17 +86,66 @@ export default function ChatPage(): JSX.Element {
       });
 
       if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
+        // Try to extract error message from response body
+        let errorMessage = `HTTP error! status: ${res.status}`;
+        try {
+          const errorData = await res.json();
+
+          if (errorData && typeof errorData === 'object') {
+            // Check for nested error object (HuggingFace format)
+            if (errorData.error && typeof errorData.error === 'object') {
+              const errObj = errorData.error;
+              if (typeof errObj.message === 'string' && errObj.message.trim()) {
+                errorMessage = errObj.message;
+              } else if (typeof errObj.code === 'string' && errObj.code.trim()) {
+                errorMessage = errObj.code;
+              } else {
+                errorMessage = JSON.stringify(errObj, null, 2);
+              }
+            }
+            // Check for FastAPI detail format
+            else if (typeof errorData.detail === 'string' && errorData.detail.trim()) {
+              errorMessage = errorData.detail;
+            }
+            // Check for generic message
+            else if (typeof errorData.message === 'string' && errorData.message.trim()) {
+              errorMessage = errorData.message;
+            }
+            // Fallback: safely stringify the entire error object
+            else {
+              errorMessage = JSON.stringify(errorData, null, 2);
+            }
+          }
+        } catch {
+          // If parsing fails, use the status-based error message
+        }
+        throw new Error(errorMessage);
       }
 
-      const data: QuestionResponse = await res.json();
-      setResponse(data);
+      const data = await res.json();
+
+      // Safely process response to ensure no [object Object] appears
+      const processedResponse: QuestionResponse = {
+        answer: safeStringify(data.answer),
+        sources: Array.isArray(data.sources) ? data.sources : [],
+        mode: safeStringify(data.mode),
+        confidence: safeStringify(data.confidence)
+      };
+
+      setResponse(processedResponse);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to connect to backend. Please try again later.'
-      );
+      // Ensure error is always a string, never [object Object]
+      let errorMsg = 'Failed to connect to backend. Please try again later.';
+
+      if (err instanceof Error) {
+        errorMsg = err.message;
+      } else if (typeof err === 'string') {
+        errorMsg = err;
+      } else if (err && typeof err === 'object') {
+        errorMsg = JSON.stringify(err, null, 2);
+      }
+
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }

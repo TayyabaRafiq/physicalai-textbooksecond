@@ -34,7 +34,15 @@
       "Bash(npm start)",
       "Bash(timeout 30 bash:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npm run build:*)",
+      "Bash(git push:*)",
+      "Bash(findstr:*)",
+      "Bash(python:*)",
+      "Bash(.venvScriptsactivate)",
+      "Bash(uvicorn:*)",
+      "Bash(timeout:*)",
+      "Bash(curl:*)"
     ]
   }
 }

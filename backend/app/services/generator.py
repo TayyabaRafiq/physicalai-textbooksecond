@@ -123,17 +123,47 @@ class GeneratorService:
             )
 
             # CRITICAL FIX: Ensure answer is ALWAYS a string
+            answer_text = None
+
             try:
-                if hasattr(response, 'text') and response.text:
-                    answer_text = str(response.text).strip()
-                elif isinstance(response, dict) and 'text' in response:
-                    answer_text = str(response['text']).strip()
-                else:
-                    answer_text = str(response).strip()
-                if not answer_text:
-                    answer_text = "Unable to generate answer."
+                # Log the response type for debugging
+                logger.info(f"Cohere response type: {type(response)}")
+                logger.info(f"Cohere response dir: {dir(response)}")
+
+                # Method 1: Standard ChatResponse.text attribute
+                if hasattr(response, 'text'):
+                    answer_text = response.text
+                    logger.info(f"Extracted via .text attribute. Type: {type(answer_text)}")
+
+                # Method 2: ChatResponse.message attribute (alternative)
+                elif hasattr(response, 'message'):
+                    answer_text = response.message
+                    logger.info(f"Extracted via .message attribute. Type: {type(answer_text)}")
+
+                # Method 3: Dict format
+                elif isinstance(response, dict):
+                    answer_text = response.get('text') or response.get('message')
+                    logger.info(f"Extracted from dict. Type: {type(answer_text)}")
+
+                # Convert to string safely
+                if answer_text is not None:
+                    # If it's still an object, try to extract text from it
+                    if hasattr(answer_text, 'text'):
+                        answer_text = answer_text.text
+                    elif hasattr(answer_text, 'content'):
+                        answer_text = answer_text.content
+
+                    # Final string conversion
+                    answer_text = str(answer_text).strip()
+                    logger.info(f"Final answer_text (first 100 chars): {answer_text[:100]}")
+
+                if not answer_text or answer_text == "":
+                    logger.error(f"Empty answer extracted. Full response: {response}")
+                    answer_text = "Unable to generate answer. Please try again."
+
             except Exception as e:
-                answer_text = "Error processing response."
+                logger.error(f"Error extracting text from Cohere: {str(e)}. Response type: {type(response)}")
+                answer_text = f"Error processing response: {str(e)}"
 
             # Step 4: Assess confidence based on chunk scores
             confidence = self._assess_confidence(context_chunks)
@@ -342,17 +372,46 @@ Answer (be clear and beginner-friendly):"""
             )
 
             # CRITICAL FIX: Ensure answer is ALWAYS a string
+            answer_text = None
+
             try:
-                if hasattr(response, 'text') and response.text:
-                    answer_text = str(response.text).strip()
-                elif isinstance(response, dict) and 'text' in response:
-                    answer_text = str(response['text']).strip()
-                else:
-                    answer_text = str(response).strip()
-                if not answer_text:
-                    answer_text = "Unable to generate answer."
+                # Log the response type for debugging
+                logger.info(f"Cohere response type (selected text): {type(response)}")
+
+                # Method 1: Standard ChatResponse.text attribute
+                if hasattr(response, 'text'):
+                    answer_text = response.text
+                    logger.info(f"Extracted via .text attribute. Type: {type(answer_text)}")
+
+                # Method 2: ChatResponse.message attribute (alternative)
+                elif hasattr(response, 'message'):
+                    answer_text = response.message
+                    logger.info(f"Extracted via .message attribute. Type: {type(answer_text)}")
+
+                # Method 3: Dict format
+                elif isinstance(response, dict):
+                    answer_text = response.get('text') or response.get('message')
+                    logger.info(f"Extracted from dict. Type: {type(answer_text)}")
+
+                # Convert to string safely
+                if answer_text is not None:
+                    # If it's still an object, try to extract text from it
+                    if hasattr(answer_text, 'text'):
+                        answer_text = answer_text.text
+                    elif hasattr(answer_text, 'content'):
+                        answer_text = answer_text.content
+
+                    # Final string conversion
+                    answer_text = str(answer_text).strip()
+                    logger.info(f"Final answer_text (first 100 chars): {answer_text[:100]}")
+
+                if not answer_text or answer_text == "":
+                    logger.error(f"Empty answer extracted. Full response: {response}")
+                    answer_text = "Unable to generate answer. Please try again."
+
             except Exception as e:
-                answer_text = "Error processing response."
+                logger.error(f"Error extracting text from Cohere: {str(e)}. Response type: {type(response)}")
+                answer_text = f"Error processing response: {str(e)}"
 
             logger.info(
                 "Generated answer from selected text",

@@ -120,13 +120,26 @@ async def ask_question(
         )
 
     except Exception as e:
+        error_msg = str(e)
+
+        # Check for rate limiting errors
+        if "429" in error_msg or "rate limit" in error_msg.lower() or "too many requests" in error_msg.lower():
+            logger.warning(
+                f"Rate limit hit for question: {request.question[:100]}",
+                extra={"error": error_msg}
+            )
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Our AI service is experiencing high demand. Please wait a moment and try again."
+            )
+
         logger.error(
-            f"Failed to answer question: {str(e)}",
-            extra={"error": str(e), "question": request.question[:100]}
+            f"Failed to answer question: {error_msg}",
+            extra={"error": error_msg, "question": request.question[:100]}
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to answer question: {str(e)}"
+            detail=f"Failed to answer question: {error_msg}"
         )
 
 # ---------------------------
@@ -184,11 +197,24 @@ async def ask_about_selected_text(
         )
 
     except Exception as e:
+        error_msg = str(e)
+
+        # Check for rate limiting errors
+        if "429" in error_msg or "rate limit" in error_msg.lower() or "too many requests" in error_msg.lower():
+            logger.warning(
+                f"Rate limit hit for selected text question: {request.question[:100]}",
+                extra={"error": error_msg}
+            )
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Our AI service is experiencing high demand. Please wait a moment and try again."
+            )
+
         logger.error(
-            f"Failed to answer selected text question: {str(e)}",
-            extra={"error": str(e), "question": request.question[:100]}
+            f"Failed to answer selected text question: {error_msg}",
+            extra={"error": error_msg, "question": request.question[:100]}
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to answer question: {str(e)}"
+            detail=f"Failed to answer question: {error_msg}"
         )

@@ -1,5 +1,6 @@
 FROM python:3.11-slim
 
+# Build timestamp: 2026-01-01
 WORKDIR /app
 
 # Install system dependencies

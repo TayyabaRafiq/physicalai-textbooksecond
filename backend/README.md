@@ -35,5 +35,3 @@ Once deployed, visit:
 - `/docs` - Interactive API documentation (Swagger UI)
 - `/redoc` - Alternative API documentation (ReDoc)
 - `/health` - Health check endpoint
-
-

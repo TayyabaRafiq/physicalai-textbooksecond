@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Physical AI RAG Backend",
-    version="0.1.0",
+    version="0.1.1",
 )
 
 # ✅ Middleware goes HERE (NOT in startup)
@@ -27,7 +27,7 @@ def health():
 def root():
     return {
         "service": "Physical AI RAG Backend",
-        "version": "0.1.0",
+        "version": "0.1.1",
     }
 
 # --------------------------------------------------

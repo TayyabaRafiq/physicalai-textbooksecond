@@ -36,3 +36,4 @@ Once deployed, visit:
 - `/redoc` - Alternative API documentation (ReDoc)
 - `/health` - Health check endpoint
 
+

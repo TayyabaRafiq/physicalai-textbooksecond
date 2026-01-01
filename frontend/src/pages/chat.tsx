@@ -92,8 +92,19 @@ export default function ChatPage(): React.JSX.Element {
           const errorData = await res.json();
 
           if (errorData && typeof errorData === 'object') {
+            // Check for nested detail.error object (custom error handler format)
+            if (errorData.detail && typeof errorData.detail === 'object' && errorData.detail.error) {
+              const errObj = errorData.detail.error;
+              if (typeof errObj.message === 'string' && errObj.message.trim()) {
+                errorMessage = errObj.message;
+              } else if (typeof errObj.code === 'string' && errObj.code.trim()) {
+                errorMessage = errObj.code;
+              } else {
+                errorMessage = JSON.stringify(errObj, null, 2);
+              }
+            }
             // Check for nested error object (HuggingFace format)
-            if (errorData.error && typeof errorData.error === 'object') {
+            else if (errorData.error && typeof errorData.error === 'object') {
               const errObj = errorData.error;
               if (typeof errObj.message === 'string' && errObj.message.trim()) {
                 errorMessage = errObj.message;
@@ -103,7 +114,7 @@ export default function ChatPage(): React.JSX.Element {
                 errorMessage = JSON.stringify(errObj, null, 2);
               }
             }
-            // Check for FastAPI detail format
+            // Check for FastAPI detail format (string)
             else if (typeof errorData.detail === 'string' && errorData.detail.trim()) {
               errorMessage = errorData.detail;
             }

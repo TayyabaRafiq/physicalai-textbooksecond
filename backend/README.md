@@ -7,6 +7,7 @@ sdk: docker
 app_port: 7860
 pinned: false
 license: mit
+updated: 2026-01-01
 ---
 
 # Physical AI RAG Backend

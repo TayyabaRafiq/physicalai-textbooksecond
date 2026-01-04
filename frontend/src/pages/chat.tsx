@@ -53,12 +53,16 @@ export default function ChatPage(): React.JSX.Element {
     const thanks = ['thanks', 'thank you', 'thx', 'thankyou', 'shukriya', 'شکریہ'];
 
     if (greetings.some(g => lowerQuestion === g || lowerQuestion.startsWith(g + ' '))) {
-      setResponse({
+      const greetingResponse = {
         answer: "Hello! 👋 I'm your Physical AI & Robotics assistant. I can help you with questions about Physical AI, ROS 2, simulation, humanoid robotics, and safety. Feel free to ask me anything!",
         sources: [],
         mode: 'greeting',
         confidence: 'High'
-      });
+      };
+      console.log('Greeting response:', greetingResponse);
+      console.log('Answer type:', typeof greetingResponse.answer);
+      console.log('Answer value:', greetingResponse.answer);
+      setResponse(greetingResponse);
       return;
     }
 
@@ -175,7 +179,7 @@ export default function ChatPage(): React.JSX.Element {
     >
       <div className={styles.chatContainer}>
         <div className={styles.chatHeader}>
-          <h1>Physical AI Chatbot</h1>
+          <h1>Physical AI Chatbot v2</h1>
           <p>Ask questions about Physical AI, ROS 2, simulation, and robotics</p>
         </div>
 
@@ -232,7 +236,13 @@ export default function ChatPage(): React.JSX.Element {
           <div className={styles.responseContainer}>
             <div className={styles.answerSection}>
               <h3>Answer</h3>
-              <div className={styles.answerText}>{response.answer}</div>
+              <div className={styles.answerText}>
+                {(() => {
+                  console.log('Rendering answer:', response.answer);
+                  console.log('Answer type in render:', typeof response.answer);
+                  return response.answer;
+                })()}
+              </div>
               <div className={styles.metadata}>
                 <span className={styles.badge}>
                   Confidence: {response.confidence}

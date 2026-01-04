@@ -176,7 +176,7 @@ export default function ChatPage(): React.JSX.Element {
       <div className={styles.chatContainer}>
         <div className={styles.chatHeader}>
           <h1>Physical AI Chatbot</h1>
-          <p>Ask questions about Physical AI, ROS 2, simulation, and safety</p>
+          <p>Ask questions about Physical AI, ROS 2, simulation, and robotics</p>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.chatForm}>
